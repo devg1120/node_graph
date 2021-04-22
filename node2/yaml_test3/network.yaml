@@ -1,0 +1,139 @@
+#  
+#                    subA                     subB
+#                 +-------+                +-------+
+#                     |                        |
+#                     |                        |
+#                     |         subAB          |
+#                   [RA]----------------------[RB]
+#  subX               |                        |                subY
+#  +                  |                        |                 +
+#  |                  |                        |                 |
+#  |------[RX]------- |subAC              subBD|--------[RY]-----|
+#  |                  |                        |                 |
+#  +                  |                        |                 +
+#                     |                        |
+#                   [RC]----------------------[RD]
+#                     |         subCD          |
+#                     |                        |
+#                     |                        |
+#                 +-------+                +-------+
+#                    subC                     subD
+#  
+#  
+
+
+routers
+    - 
+      hostname: RA
+      subnets:
+        - 
+          name: subA
+          ipaddr:  10.190.20.1/24
+        - 
+          name: subAB
+          ipaddr:  10.190.20.1/24
+        -
+          name: subAC
+          ipaddr:  10.190.20.1/24
+
+    - 
+      hostname: RB
+      subnets:
+        - 
+          name: subB
+          ipaddr:  10.190.20.1/24
+        - 
+          name: subAB
+          ipaddr:  10.190.20.1/24
+        - 
+          name: subBD
+          ipaddr:  10.190.20.1/24
+
+    - 
+      hostname: RC
+      subnets:
+        - 
+          name: subC
+          ipaddr:  10.190.20.1/24
+        - 
+          name: subCD
+          ipaddr:  10.190.20.1/24
+        - 
+          name: subAC
+          ipaddr:  10.190.20.1/24
+
+    - 
+      hostname: RD
+      subnets:
+        - 
+          name: subD
+          ipaddr:  10.190.20.1/24
+        - 
+          name: subCD
+          ipaddr:  10.190.20.1/24
+        - 
+          name: subBD
+          ipaddr:  10.190.20.1/24
+
+    - 
+      hostname: RX
+      subnets:
+        - 
+          name: subX
+          ipaddr:  10.190.20.1/24
+        - 
+          name: subAC
+          ipaddr:  10.190.20.1/24
+
+    - 
+      hostname: RY
+      subnets:
+        - 
+          name: subY
+          ipaddr:  10.190.20.1/24
+        - 
+          name: subBD
+          ipaddr:  10.190.20.1/24
+
+
+subnets
+    - 
+      name: subA
+      subnet: 10.190.2.0/24
+
+    - 
+      name: subB
+      subnet: 10.190.2.0/24
+
+    - 
+      name: subC
+      subnet: 10.190.2.0/24
+
+    - 
+      name: subD
+      subnet: 10.190.2.0/24
+
+    - 
+      name: subX
+      subnet: 10.190.2.0/24
+
+    - 
+      name: subY
+      subnet: 10.190.2.0/24
+
+    - 
+      name: subAB
+      subnet: 10.190.2.0/24
+
+    - 
+      name: subAC
+      subnet: 10.190.2.0/24
+
+    - 
+      name: subBD
+      subnet: 10.190.2.0/24
+
+    - 
+      name: subCB
+      subnet: 10.190.2.0/24
+
