@@ -1,0 +1,143 @@
+#  
+#                   subA(1)                    subB(2)
+#                 +-------+                  +-------+
+#                     |                          |
+#                     |                          |
+#                     |                          |
+#                     |.1       subAB(7)         |.1
+#                   [RA]------------------------[RB]
+#  subX(5)        .254|  .254              .253  |.254              subY(6)
+#  +                  |                          |                  +
+#  |                  |                          |                  |
+#  |    .1    .253    |                          |    .253     .1   |
+#  |------[RX]--------|subAC(8)          subBD(9)|--------[RY]------|
+#  |                  |                          |                  |
+#  |                  |                          |                  |
+#  +                  |                          |                  +
+#                 .252|  .254              .253  |.252
+#                   [RC]------------------------[RD]
+#                     |.1      subCD(10)         |.1
+#                     |                          |
+#                     |                          |
+#                     |                          |
+#                 +-------+                  +-------+
+#                   subC(3)                    subD(4)
+#  
+#  
+
+
+routers:
+    - 
+      hostname: RA
+      interfaces:
+        - 
+          name: subA
+          ipaddr:  10.190.1.1/24
+        - 
+          name: subAB
+          ipaddr:  10.190.7.254/24
+        -
+          name: subAC
+          ipaddr:  10.190.8.254/24
+
+    - 
+      hostname: RB
+      interfaces:
+        - 
+          name: subB
+          ipaddr:  10.190.2.1/24
+        - 
+          name: subAB
+          ipaddr:  10.190.7.253/24
+        - 
+          name: subBD
+          ipaddr:  10.190.9.254/24
+
+    - 
+      hostname: RC
+      interfaces:
+        - 
+          name: subC
+          ipaddr:  10.190.3.1/24
+        - 
+          name: subCD
+          ipaddr:  10.190.10.254/24
+        - 
+          name: subAC
+          ipaddr:  10.190.8.252/24
+
+    - 
+      hostname: RD
+      interfaces:
+        - 
+          name: subD
+          ipaddr:  10.190.4.1/24
+        - 
+          name: subCD
+          ipaddr:  10.190.10.253/24
+        - 
+          name: subBD
+          ipaddr:  10.190.9.252/24
+
+    - 
+      hostname: RX
+      interfaces:
+        - 
+          name: subX
+          ipaddr:  10.190.5.1/24
+        - 
+          name: subAC
+          ipaddr:  10.190.8.253/24
+
+    - 
+      hostname: RY
+      interfaces:
+        - 
+          name: subY
+          ipaddr:  10.190.6.1/24
+        - 
+          name: subBD
+          ipaddr:  10.190.9.253/24
+
+
+subnets:
+    - 
+      name: subA
+      netaddr: 10.190.1.0/24
+
+    - 
+      name: subB
+      netaddr: 10.190.2.0/24
+
+    - 
+      name: subC
+      netaddr: 10.190.3.0/24
+
+    - 
+      name: subD
+      netaddr: 10.190.4.0/24
+
+    - 
+      name: subX
+      netaddr: 10.190.5.0/24
+
+    - 
+      name: subY
+      netaddr: 10.190.6.0/24
+
+    - 
+      name: subAB
+      netaddr: 10.190.7.0/24
+
+    - 
+      name: subAC
+      netaddr: 10.190.8.0/24
+
+    - 
+      name: subBD
+      netaddr: 10.190.9.0/24
+
+    - 
+      name: subCD
+      netaddr: 10.190.10.0/24
+
