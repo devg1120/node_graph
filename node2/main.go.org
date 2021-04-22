@@ -1,17 +1,6 @@
 package main
 
-
-
-import (
-  //import "local.packages/graph"
-  "fmt"
-  //"strings"
-  "io/ioutil"
-  //yaml "gopkg.in/yaml.v2"
-  yaml    "github.com/goccy/go-yaml"
-  //  "gopkg.in/go-playground/validator.v9"
-
-)
+import "local.packages/graph"
 
 /*
                   subA                     subB
@@ -34,43 +23,8 @@ subX               |                        |                subY
      
 */
 
-type Data struct {
-  Routers  []Router `yaml:"routers"`
-  Subnets  []Subnet `yaml:"subnets"`
-}
-
 func main() {
 
-  buf, err := ioutil.ReadFile("./network.yaml")
-  if err != nil {
-    panic(err)
-  }
-  //fmt.Printf("buf: %+v\n", string(buf))
-
-  var d Data
-  err = yaml.Unmarshal(buf, &d)
-  if err != nil {
-    panic(err)
-  }
-
-
-  for _, v := range d.Subnets {
-
-    fmt.Printf("%s\t%s\n", v.Name, v.Netaddr)
-
-  }
-
-  for _, v := range d.Routers {
-
-    fmt.Printf("%s\n", v.HostName)
-    for _, i := range v.Interfaces {
-        fmt.Printf("    %s\t%s\n", i.Name, i.Ipaddr)
-    }
-
-  }
-
-
-/*
  nodes := []graph.Node{}
  router :=  Router{ "routerA",1 }
  router2 :=  Router{ "routerB",2 }
@@ -95,10 +49,6 @@ func main() {
 
 // fmt.Printf("%v\n", g)
 // g.Dump()
-*/
-
-
-
 
 /*
     self := 0.0                   // the cost of self connection

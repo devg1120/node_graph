@@ -2,11 +2,37 @@ package main
 
 import (
   "fmt"
+  //"strings"
   "io/ioutil"
-  yaml "gopkg.in/yaml.v2"
+  //yaml "gopkg.in/yaml.v2"
+  yaml    "github.com/goccy/go-yaml"
+  //  "gopkg.in/go-playground/validator.v9"
+
 )
 
-// structたち
+//----------------------------------------------------
+type Data struct {
+  Routers  []Router `yaml:"routers"`
+  Subnets  []Subnet `yaml:"subnets"`
+}
+
+type Router struct {
+  HostName         string           `yaml:"hostname"`
+  Interfaces       []Interface      `yaml:"interfaces"`
+}
+
+type Interface struct {
+  Name         string           `yaml:"name"`
+  Ipaddr       string           `yaml:"ipaddr"`
+}
+
+type Subnet struct {
+  Name             string           `yaml:"name"`
+  Netaddr           string          `yaml:"netaddr"`
+}
+
+//----------------------------------------------------
+/*
 type Data struct {
   Users  []User `yaml:"users"`
   Entrys []User `yaml:"entrys"`
@@ -30,23 +56,33 @@ type selfIntroduction struct {
   Long  string `yaml:"long"`
   Short string `yaml:"short"`
 }
+*/
 
 func main() {
-  // yamlを読み込む
-  buf, err := ioutil.ReadFile("./sample.yaml")
+
+  buf, err := ioutil.ReadFile("./network.yaml")
   if err != nil {
     panic(err)
   }
-  fmt.Printf("buf: %+v\n", string(buf))
+  //fmt.Printf("buf: %+v\n", string(buf))
 
-  // structにUnmasrshal
   var d Data
   err = yaml.Unmarshal(buf, &d)
   if err != nil {
     panic(err)
   }
-  fmt.Printf("d: %+v\n\n", d)
-  fmt.Printf("d: %+v\n\n", d.Users[0])
-  fmt.Printf("d: %+v\n\n", d.Entrys[1])
+
+  //fmt.Printf("d: %+v\n\n", d)
+  //fmt.Printf("d: %+v\n\n", d.Routers[0])
+  //fmt.Printf("d: %+v\n\n", d.Subnets[1])
+
+  for _, v := range d.Routers {
+
+    fmt.Printf("%s\n", v.HostName)
+    for _, i := range v.Interfaces {
+        fmt.Printf("    %s\t%s\n", i.Name, i.Ipaddr)
+    }
+
+  }
 
 }
