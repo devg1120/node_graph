@@ -4,9 +4,9 @@ package graph
 //	"github.com/justinbarrick/hone/pkg/utils"
 //)
 
-type Node interface {
-	GetName() (string)
-	ID() (int64)
+type NetNode interface {
+	GetName() string
+	ID() int64
 }
 
 //func ID(node Node) int64 {

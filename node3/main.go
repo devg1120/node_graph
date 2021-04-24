@@ -56,7 +56,7 @@ func main() {
 
 	var id int64
 	id = 1
-	nodes := []graph.Node{}
+	nodes := []graph.NetNode{}
 	g := graph.NewGraph(nodes)
 	for _, v := range d.Routers {
 
@@ -86,7 +86,6 @@ func main() {
 	//fmt.Printf("subnet_dic\n%v\n\n", subnet_dic)
 	//fmt.Printf("----------------------------------------\n")
 
-
 	//fmt.Printf("----------------------------------------\n")
 	for _, v := range router_dic {
 
@@ -113,13 +112,95 @@ func main() {
 
 	g.Dump()
 
-    iter_nodes := g.GetNodes()
+	iter_nodes := g.GetNodes()
 
-        for iter_nodes.Next() {
-                fmt.Printf("%T\n", iter_nodes)
-                fmt.Printf("%v\n", iter_nodes)
-                r := Router{}
-                fmt.Printf("%s\n", r)
-        }
+	for iter_nodes.Next() {
+		node := iter_nodes.Node()
+		switch v := node.(type) {
+		case Router:
+			fmt.Printf("%s\n", v.HostName)
+			fmt.Printf("%s\n", v.GetName())
+		case Subnet:
+			fmt.Printf("%s\n", v.Name)
+			fmt.Printf("%s\n", v.GetName())
+		default:
+			fmt.Printf("I don't know about type %T!\n", v)
+		}
+	}
+
+	//node := g.Node(int64(2))
+
+	var cnt int64 = 1
+	for {
+		node := g.Node(cnt)
+		cnt++
+		if node != nil {
+			switch v := node.(type) {
+			case Router:
+				fmt.Printf("%s\n", v.HostName)
+				fmt.Printf("%s\n", v.GetName())
+			case Subnet:
+				fmt.Printf("%s\n", v.Name)
+				fmt.Printf("%s\n", v.GetName())
+			default:
+				fmt.Printf("I don't know about type %T!\n", v)
+			}
+		} else {
+			break
+		}
+
+	} //end for
+
+	iter_edges := g.GetEdges()
+
+	for iter_edges.Next() {
+		edge := iter_edges.Edge()
+		//fmt.Printf("%v\n", edge.From())
+		//fmt.Printf("%v\n", edge.To())
+                printEdge(edge.From().(graph.NetNode), edge.To().(graph.NetNode))
+	}
+
+	//connect_nodes := g.From(int64(5))
+        //fmt.Printf("%v\n", connect_nodes)
+        iter_nodes = g.GetNeighbour( router_dic["RA"])
+	for iter_nodes.Next() {
+		node := iter_nodes.Node()
+		//fmt.Printf("%v\n", edge.From())
+		//fmt.Printf("%v\n", edge.To())
+                printNode(node.(graph.NetNode))
+	}
+}
+
+func printNode(node graph.NetNode) {
+	switch v := node.(type) {
+	case Router:
+		fmt.Printf("Router [%s]", v.GetName())
+	case Subnet:
+		fmt.Printf("Subnet %s", v.GetName())
+	default:
+		fmt.Printf("I don't know about type %T!\n", v)
+	}
+	fmt.Printf("\n")
+
+}
+func printEdge(from graph.NetNode, to graph.NetNode) {
+	switch v := from.(type) {
+	case Router:
+		fmt.Printf("[%s]", v.GetName())
+	case Subnet:
+		fmt.Printf("%s", v.GetName())
+	default:
+		fmt.Printf("I don't know about type %T!\n", v)
+	}
+	fmt.Printf(" -> ")
+	switch v := to.(type) {
+	case Router:
+		fmt.Printf("[%s]", v.GetName())
+	case Subnet:
+		fmt.Printf("%s", v.GetName())
+	default:
+		fmt.Printf("I don't know about type %T!\n", v)
+	}
+	fmt.Printf("\n")
 
 }

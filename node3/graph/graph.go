@@ -7,6 +7,7 @@ import (
 	"encoding/csv"
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/simple"
+        "gonum.org/v1/gonum/graph/iterator"
 )
 
 type Graph struct {
@@ -14,7 +15,7 @@ type Graph struct {
 	graph *simple.WeightedUndirectedGraph
 }
 
-func NewGraph(nodes []Node) Graph {
+func NewGraph(nodes []NetNode) Graph {
 	self := 0.0           // the cost of self connection
 	absent := math.Inf(1) // the wieght returned for absent edges
 
@@ -27,6 +28,13 @@ func NewGraph(nodes []Node) Graph {
 	return graph
 }
 
+//func (g *Graph) Node(id int64) NetNode {
+//    return	 g.graph.Node(id).(NetNode)
+//}
+
+func (g *Graph) Node(id int64) graph.Node {
+    return	 g.graph.Node(id)
+}
 
 func (g *Graph) GetNodes() graph.Nodes {
     return	 g.graph.Nodes()
@@ -97,6 +105,40 @@ func (g *Graph) SetEdge(from graph.Node, to graph.Node) {
 	g.graph.SetWeightedEdge(edge)
 }
 
+func (g *Graph) GetEdges() graph.Edges{
+	return g.graph.Edges()
+      
+}
+
+
+func (g *Graph) GetNeighbour(node graph.Node ) graph.Nodes{
+        var neighbour []graph.Node
+        edges :=  g.graph.Edges()
+        //nodes :=  g.graph.Nodes()
+        id := node.ID()
+        //fmt.Printf("%v\n", neighbour)
+        //fmt.Printf("%v\n", edges)
+        //fmt.Printf("%v\n", id)
+        for edges.Next() {  
+          edge := edges.Edge() 
+          if edge.From().ID() == id {
+            fmt.Printf("From OK id:%d\n", id)
+            neighbour  = append (neighbour , edge.To())
+          }
+          if edge.To().ID() == id {
+            fmt.Printf("To   OK id:%d\n", id)
+            neighbour  = append (neighbour , edge.From())
+          }
+
+        }
+        return iterator.NewOrderedNodes(neighbour)
+        //return nodes
+}
+//func (g *Graph) From(node graph.Node) []graph.Node{
+//func (g *Graph) From(node graph.Node) graph.Nodes{
+func (g *Graph) From(node int64) graph.Nodes{
+	return g.graph.From(node)
+}
 /*
 func (g *Graph) setEdges() error {
 	nodes := g.graph.Nodes()
@@ -125,11 +167,11 @@ func (g *Graph) AddDep(targetNode Node, dep string) error {
 }
 */
 
-func (g *Graph) AddNode(node Node) {
+func (g *Graph) AddNode(node NetNode) {
 	g.graph.AddNode(node)
 }
 
-func (g *Graph) BuildGraph(nodes []Node) {
+func (g *Graph) BuildGraph(nodes []NetNode) {
 	if nodes == nil {
 		return
 	}
