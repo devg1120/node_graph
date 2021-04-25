@@ -1,18 +1,21 @@
 package graph
 
 import (
+	"encoding/csv"
 	"fmt"
+	"gonum.org/v1/gonum/graph"
+	"gonum.org/v1/gonum/graph/iterator"
+	"gonum.org/v1/gonum/graph/path"
+	"gonum.org/v1/gonum/graph/simple"
+	"gonum.org/v1/gonum/graph/topo"
 	"math"
 	"os"
-	"encoding/csv"
-	"gonum.org/v1/gonum/graph"
-	"gonum.org/v1/gonum/graph/simple"
-        "gonum.org/v1/gonum/graph/iterator"
 )
 
 type Graph struct {
 	//graph *simple.DirectedGraph
-	graph *simple.WeightedUndirectedGraph
+	graph       *simple.WeightedUndirectedGraph
+	allShortest *path.AllShortest
 }
 
 func NewGraph(nodes []NetNode) Graph {
@@ -21,59 +24,114 @@ func NewGraph(nodes []NetNode) Graph {
 
 	graph := Graph{
 		//graph: simple.NewDirectedGraph(),
-		graph: simple.NewWeightedUndirectedGraph(self, absent),
+		graph:       simple.NewWeightedUndirectedGraph(self, absent),
+		allShortest: nil,
 	}
 
 	graph.BuildGraph(nodes)
 	return graph
 }
 
-//func (g *Graph) Node(id int64) NetNode {
-//    return	 g.graph.Node(id).(NetNode)
-//}
+func (g *Graph) AddNode(node NetNode) {
+	g.graph.AddNode(node)
+}
+
+func (g *Graph) SetEdge(from graph.Node, to graph.Node) {
+	edge := g.graph.NewWeightedEdge(from, to, float64(1))
+	g.graph.SetWeightedEdge(edge)
+}
+
+func (g *Graph) RemoveNode(node graph.Node ) {
+	g.graph.RemoveNode(node.ID() )
+}
+
+func (g *Graph) RemoveEdge(from graph.Node, to graph.Node) {
+	g.graph.RemoveEdge(from.ID(), to.ID())
+	g.graph.RemoveEdge(to.ID(), from.ID())
+}
+
+func (g *Graph) CalculateShortest() {
+	allst := path.DijkstraAllPaths(g.graph)
+	g.allShortest = &allst
+}
 
 func (g *Graph) Node(id int64) graph.Node {
-    return	 g.graph.Node(id)
+	return g.graph.Node(id)
 }
 
 func (g *Graph) GetNodes() graph.Nodes {
-    return	 g.graph.Nodes()
+	return g.graph.Nodes()
 }
 
-/*
-func (g *Graph) GetNodes2() []graph.Node {
-    	 iter_nodes := g.graph.Nodes()
-	 var nodes []graph.Node
+func (g *Graph) GetEdges() graph.Edges {
+	return g.graph.Edges()
+}
 
-	 for iter_nodes.Next() {
-		 nodes := append(nodes,  iter_nodes)
+//func (g *Graph) GetBetween(node1, node2 graph.Node ) graph.Nodes{
+func (g *Graph) GetBitween(node1, node2 graph.Node) [][]graph.Node {
+	id1 := node1.ID()
+	id2 := node2.ID()
+	paths, _ := g.allShortest.AllBetween(id1, id2)
+	return paths
+}
+
+func (g *Graph) GetNeighbour(node graph.Node) graph.Nodes {
+	var neighbour []graph.Node
+	edges := g.graph.Edges()
+	id := node.ID()
+	for edges.Next() {
+		edge := edges.Edge()
+		if edge.From().ID() == id {
+			//fmt.Printf("From OK id:%d\n", id)
+			neighbour = append(neighbour, edge.To())
+		}
+		if edge.To().ID() == id {
+			//fmt.Printf("To   OK id:%d\n", id)
+			neighbour = append(neighbour, edge.From())
+		}
+	}
+	return iterator.NewOrderedNodes(neighbour)
+}
+
+func (g *Graph) BuildGraph(nodes []NetNode) {
+	if nodes == nil {
+		return
+	}
+	for _, node := range nodes {
+		g.AddNode(node)
+	}
+}
+
+func (g *Graph) ConnectedComponents() [][]graph.Node {
+        paths := topo.ConnectedComponents(g.graph)
+	return paths
+}
+
+//func (g *Graph) IsPathIn(path []graph.Node) bool {
+func (g *Graph) IsPathIn(path []NetNode) bool {
+        path_ := []graph.Node{}
+        for _, v := range path {
+              path_ = append( path_, v.(graph.Node))
+        }
+        return topo.IsPathIn(g.graph, path_)
 	
-	 }
-	 return nodes
- }
-*/
-
+}
+func (g *Graph) PathExistsIn(node1 , node2 graph.Node) bool {
+        return topo.PathExistsIn(g.graph, node1, node2)
+	
+}
 
 func (g *Graph) Dump() {
 	nodes := g.graph.Nodes()
-
 	for _, node := range graph.NodesOf(nodes) {
-		//for _, node := range nodes {
-		//fmt.Printf("%v\n", node.getName())
 		fmt.Printf("node:%v\n", node)
 	}
-
 	edges1 := g.graph.Edges()
-
 	for _, edge := range graph.EdgesOf(edges1) {
-		//for _, node := range nodes {
 		fmt.Printf("edge:%v\n", edge)
 	}
-
 	fmt.Printf("%v\n", g.graph.WeightedEdges())
-
 	edges_weight := g.graph.WeightedEdges()
-	// export to weighted edgelist
 	fp2, err := os.Create("./weighted.edgelist")
 	if err != nil {
 		panic(err)
@@ -97,217 +155,4 @@ func (g *Graph) Dump() {
 		writer.Write(record)
 	}
 	writer.Flush()
-
 }
-
-func (g *Graph) SetEdge(from graph.Node, to graph.Node) {
-	edge := g.graph.NewWeightedEdge(from, to, float64(1))
-	g.graph.SetWeightedEdge(edge)
-}
-
-func (g *Graph) GetEdges() graph.Edges{
-	return g.graph.Edges()
-      
-}
-
-
-func (g *Graph) GetNeighbour(node graph.Node ) graph.Nodes{
-        var neighbour []graph.Node
-        edges :=  g.graph.Edges()
-        //nodes :=  g.graph.Nodes()
-        id := node.ID()
-        //fmt.Printf("%v\n", neighbour)
-        //fmt.Printf("%v\n", edges)
-        //fmt.Printf("%v\n", id)
-        for edges.Next() {  
-          edge := edges.Edge() 
-          if edge.From().ID() == id {
-            fmt.Printf("From OK id:%d\n", id)
-            neighbour  = append (neighbour , edge.To())
-          }
-          if edge.To().ID() == id {
-            fmt.Printf("To   OK id:%d\n", id)
-            neighbour  = append (neighbour , edge.From())
-          }
-
-        }
-        return iterator.NewOrderedNodes(neighbour)
-        //return nodes
-}
-//func (g *Graph) From(node graph.Node) []graph.Node{
-//func (g *Graph) From(node graph.Node) graph.Nodes{
-func (g *Graph) From(node int64) graph.Nodes{
-	return g.graph.From(node)
-}
-/*
-func (g *Graph) setEdges() error {
-	nodes := g.graph.Nodes()
-
-	for _, node := range graph.NodesOf(nodes) {
-		for _, dep := range node.(Node).GetDeps() {
-			g.graph.SetEdge(simple.Edge{
-				T: node,
-				F: g.graph.Node(utils.Crc(dep)),
-			})
-		}
-	}
-
-	return nil
-}
-*/
-/*
-func (g *Graph) AddDep(targetNode Node, dep string) error {
-	node := g.graph.Node(ID(targetNode))
-	if node == nil {
-		return fmt.Errorf("Node not in graph.")
-	}
-
-	node.(Node).AddDep(dep)
-	return nil
-}
-*/
-
-func (g *Graph) AddNode(node NetNode) {
-	g.graph.AddNode(node)
-}
-
-func (g *Graph) BuildGraph(nodes []NetNode) {
-	if nodes == nil {
-		return
-	}
-
-	for _, node := range nodes {
-		g.AddNode(node)
-	}
-}
-
-/*
-func (g *Graph) WaitForDeps(callback func(Node) error, servicesWg *sync.WaitGroup) func(Node) error {
-	return func(n Node) error {
-		defer close(n.GetDone())
-
-		failedDeps := []string{}
-
-		for _, node := range graph.NodesOf(g.graph.To(n.ID())) {
-			d := node.(Node)
-			_ = <-d.GetDone()
-			if d.GetError() != nil {
-				failedDeps = append(failedDeps, d.GetName())
-			}
-		}
-
-		if len(failedDeps) > 0 {
-			n.SetError(fmt.Errorf("Failed dependencies: %s", failedDeps))
-			logger.LogError(n, n.GetError().Error())
-		}
-
-		if n.GetError() != nil {
-			return n.GetError()
-		}
-
-		servicesWg.Add(1)
-		detach := make(chan bool)
-		n.SetDetach(detach)
-
-		go func() {
-			defer close(detach)
-			defer servicesWg.Done()
-			n.SetError(callback(n))
-		}()
-
-		_ = <-detach
-
-		return n.GetError()
-	}
-}
-*/
-/*
-func (g *Graph) IterSorted(callback func(Node) error) []error {
-	g.setEdges()
-
-	sorted, err := topo.Sort(g.graph)
-	if err != nil {
-		return []error{err}
-	}
-
-	errors := []error{}
-	for _, node := range sorted {
-		err := callback(node.(Node))
-		if err != nil {
-			errors = append(errors, err)
-		}
-	}
-	return errors
-}
-*/
-/*
-func (g *Graph) IterTarget(target string, callback func(Node) error) []error {
-	targetId := utils.Crc(target)
-	targetNode := g.graph.Node(targetId)
-	if targetNode == nil {
-		return []error{errors.New(fmt.Sprintf("Target %s not found.", target))}
-	}
-
-	return g.IterSorted(func(node Node) error {
-		if !topo.PathExistsIn(g.graph, g.graph.Node(node.ID()), targetNode) {
-			return nil
-		}
-
-		return callback(node)
-	})
-}
-*/
-/*
-func (g *Graph) ResolveTarget(target string, callback func(Node) error) []error {
-	stopCh := make(chan bool)
-
-	var wg sync.WaitGroup
-	var servicesWg sync.WaitGroup
-
-	callback = g.WaitForDeps(callback, &servicesWg)
-	errors := []error{}
-
-	iterErrors := g.IterTarget(target, func(node Node) error {
-		wg.Add(1)
-
-		go func(n Node) {
-			defer wg.Done()
-			n.SetStop(stopCh)
-			err := callback(n)
-			if err != nil {
-				errors = append(errors, err)
-			}
-		}(node)
-
-		return nil
-	})
-
-	errors = append(errors, iterErrors...)
-
-	wg.Wait()
-	close(stopCh)
-	servicesWg.Wait()
-	return errors
-}
-*/
-/*
-func (g *Graph) LongestTarget(target string) (int, []error) {
-	longestName := 0
-	lock := sync.Mutex{}
-
-	errors := g.IterTarget(target, func(n Node) error {
-		lock.Lock()
-
-		name := n.GetName()
-
-		if len(name) > longestName {
-			longestName = len(name)
-		}
-
-		lock.Unlock()
-		return nil
-	})
-
-	return longestName, errors
-}
-*/

@@ -44,7 +44,7 @@ func main() {
 
 	var d Data
 	router_dic := make(map[string]Router)
-	subnetaddr_dic := make(map[string]Subnet)
+	subnet_dic := make(map[string]Subnet)
 	subnetname_dic := make(map[string]Subnet)
 
 	err = yaml.Unmarshal(buf, &d)
@@ -57,8 +57,9 @@ func main() {
 	nodes := []graph.NetNode{}
 	g := graph.NewGraph(nodes)
 	for _, v := range d.Routers {
-		//fmt.Printf("%T\n", v)
-		//fmt.Printf("%s\n", v.GetName())
+
+		fmt.Printf("%T\n", v)
+		fmt.Printf("%s\n", v.GetName())
 		v._ID = id
 		id++
 		g.AddNode(v)
@@ -67,12 +68,13 @@ func main() {
 	}
 
 	for _, v := range d.Subnets {
-		//fmt.Printf("%T\n", v)
-		//fmt.Printf("%s\n", v.GetName())
+
+		fmt.Printf("%T\n", v)
+		fmt.Printf("%s\n", v.GetName())
 		v._ID = id
 		id++
 		g.AddNode(v)
-		subnetaddr_dic[v.Netaddr] = v
+		subnet_dic[v.Netaddr] = v
 		subnetname_dic[v.Name] = v
 
 	}
@@ -82,6 +84,7 @@ func main() {
 	//fmt.Printf("----------------------------------------\n")
 
 	for _, v := range router_dic {
+
 		for _, i := range v.Interfaces {
 			_, ipnet, _ := net.ParseCIDR(i.Ipaddr)
 			masklen, _ := ipnet.Mask.Size()
@@ -90,17 +93,15 @@ func main() {
 			//fmt.Println(ipnet.Mask) // ffffff00
 			//fmt.Println(masklen) // 24
 			subnet := fmt.Sprintf("%s/%d", ipnet.IP, masklen)
-			s := subnetaddr_dic[subnet]
+			s := subnet_dic[subnet]
 			g.SetEdge(v, s)
+
 		}
+
 	}
 
-	g.CalculateShortest()
-        //------------------------------------------------------------------------
+	g.Dump()
 
-	//g.Dump()
-
-        // GetNodes
 	iter_nodes := g.GetNodes()
 
 	for iter_nodes.Next() {
@@ -117,7 +118,6 @@ func main() {
 		}
 	}
 
-        // Node
 	var cnt int64 = 1
 	for {
 		node := g.Node(cnt)
@@ -137,9 +137,8 @@ func main() {
 			break
 		}
 
-	} 
+	} //end for
 
-        // GetEdges
 	iter_edges := g.GetEdges()
 
 	for iter_edges.Next() {
@@ -147,7 +146,6 @@ func main() {
 		printEdge(edge.From().(graph.NetNode), edge.To().(graph.NetNode))
 	}
 
-        // GetNeighbour
 	iter_nodes = g.GetNeighbour(router_dic["RA"])
 	for iter_nodes.Next() {
 		node := iter_nodes.Node()
@@ -162,8 +160,7 @@ func main() {
 		printNode(node.(graph.NetNode))
 	}
 
-
-        // GetBetween
+	g.CalculateShortest()
 	//paths := g.GetBitween(router_dic["RA"], router_dic["RY"])
 	paths := g.GetBitween(subnetname_dic["subA"], subnetname_dic["subD"])
 	fmt.Printf("paths count:%d\n", len(paths))
@@ -174,53 +171,6 @@ func main() {
 		}
 		fmt.Printf("\n")
 	}
-
-        // ConnectedComponents
-        cons := g.ConnectedComponents()
-	fmt.Printf("cons count:%d\n", len(cons))
-	for i, array := range cons {
-		for j, value := range array {
-			fmt.Println(fmt.Sprintf("   [%d][%d] :%v\t\t%d",
-				i, j, value.(graph.NetNode).GetName(),
-				      value.(graph.NetNode).ID()))
-		}
-		fmt.Printf("\n")
-	}
-
-        // IsPathIn
-        path := [] graph.NetNode{}
-        path = append( path, router_dic["RA"])
-        path = append( path, subnetname_dic["subA"])
-        fmt.Printf("%v\n",g.IsPathIn(path))
-
-        path = [] graph.NetNode{}
-        path = append( path, subnetname_dic["subA"])
-        path = append( path, router_dic["RA"])
-        path = append( path, subnetname_dic["subAB"])
-        path = append( path, router_dic["RB"])
-        fmt.Printf("%v\n",g.IsPathIn(path))
-
-        path = [] graph.NetNode{}
-        path = append( path, subnetname_dic["subA"])
-        path = append( path, router_dic["RA"])
-        path = append( path, subnetname_dic["subAB"])
-        path = append( path, router_dic["RC"])
-        fmt.Printf("%v\n",g.IsPathIn(path))
-
-        path = [] graph.NetNode{}
-        path = append( path, subnetname_dic["subA"])
-        path = append( path, router_dic["RA"])
-        path = append( path, subnetname_dic["subAB"])
-        path = append( path, router_dic["RB"])
-        path = append( path, subnetname_dic["subBD"])
-        path = append( path, router_dic["RY"])
-        path = append( path, subnetname_dic["subY"])
-        fmt.Printf("%v\n",g.IsPathIn(path))
-
-        //g.RemoveEdge(router_dic["RY"], subnetname_dic["subY"])
-        //g.RemoveNode(subnetname_dic["subY"])
-        fmt.Printf("%v\n",g.IsPathIn(path))
-
 }
 
 func printNode(node graph.NetNode) {
@@ -233,8 +183,8 @@ func printNode(node graph.NetNode) {
 		fmt.Printf("I don't know about type %T!\n", v)
 	}
 	fmt.Printf("\n")
-}
 
+}
 func printEdge(from graph.NetNode, to graph.NetNode) {
 	switch v := from.(type) {
 	case Router:
@@ -254,4 +204,5 @@ func printEdge(from graph.NetNode, to graph.NetNode) {
 		fmt.Printf("I don't know about type %T!\n", v)
 	}
 	fmt.Printf("\n")
+
 }
